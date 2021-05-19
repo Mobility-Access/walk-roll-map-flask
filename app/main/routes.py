@@ -28,7 +28,7 @@ def index():
     return jsonify(rando)
 
 
-@bp.route('/point')
+@bp.route('/api/point')
 def point():
     bbox = request.args.get('bbox')
     if bbox is None:
@@ -40,7 +40,7 @@ def point():
     return jsonify(data)
 
 
-@bp.route('/amenity', methods=['GET', 'POST'])
+@bp.route('/api/amenity', methods=['GET', 'POST'])
 def amenity():
     if request.method == 'POST':
         data = request.get_json() or {}
@@ -71,7 +71,7 @@ def amenity():
     return jsonify(data)
 
 
-@bp.route('/barrier', methods=['GET', 'POST'])
+@bp.route('/api/barrier', methods=['GET', 'POST'])
 def barrier():
     if request.method == 'POST':
         data = request.get_json() or {}
@@ -101,7 +101,7 @@ def barrier():
     return jsonify(data)
 
 
-@bp.route('/concern', methods=['GET', 'POST'])
+@bp.route('/api/concern', methods=['GET', 'POST'])
 def concern():
     if request.method == 'POST':
         data = request.get_json() or {}
@@ -131,7 +131,7 @@ def concern():
     return jsonify(data)
 
 
-@bp.route('/incident', methods=['GET', 'POST'])
+@bp.route('/api/incident', methods=['GET', 'POST'])
 def incident():
     if request.method == 'POST':
         data = request.get_json() or {}
