@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 3c990b8a15c2
+Revision ID: 12cb51a033c9
 Revises: 
-Create Date: 2021-05-22 11:56:43.038642
+Create Date: 2021-05-22 14:36:45.980890
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ from geoalchemy2 import Geometry
 
 
 # revision identifiers, used by Alembic.
-revision = '3c990b8a15c2'
+revision = '12cb51a033c9'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,7 +28,7 @@ def upgrade():
     sa.Column('disability', sa.String(length=5), nullable=True),
     sa.Column('disability_type', sa.String(length=50), nullable=True),
     sa.Column('gender', sa.String(length=50), nullable=True),
-    sa.Column('geom', Geometry(geometry_type='POINT', srid=4326, from_text='ST_GeomFromEWKT', name='geometry'), nullable=True),
+    sa.Column('geom', Geometry(geometry_type='POINT', srid=3857, from_text='ST_GeomFromEWKT', name='geometry'), nullable=True),
     sa.Column('mobility_aid', sa.String(length=5), nullable=True),
     sa.Column('mobility_aid_type', sa.String(length=50), nullable=True),
     sa.Column('race', sa.String(length=50), nullable=True),
@@ -51,7 +51,7 @@ def upgrade():
     )
     op.create_table('concern',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('concern_type', sa.String(length=20), nullable=True),
+    sa.Column('concern_type', sa.String(length=50), nullable=True),
     sa.Column('concern_with', sa.String(length=50), nullable=True),
     sa.ForeignKeyConstraint(['id'], ['point.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -59,13 +59,13 @@ def upgrade():
     op.create_table('incident',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('incident_type', sa.String(length=10), nullable=True),
-    sa.Column('incident_with', sa.String(length=25), nullable=True),
-    sa.Column('injury_type', sa.String(length=20), nullable=True),
+    sa.Column('incident_with', sa.String(length=50), nullable=True),
+    sa.Column('injury_type', sa.String(length=50), nullable=True),
     sa.Column('involvement', sa.String(length=10), nullable=True),
     sa.ForeignKeyConstraint(['id'], ['point.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    # op.drop_table('spatial_ref_sys')
+    #op.drop_table('spatial_ref_sys')
     # ### end Alembic commands ###
 
 

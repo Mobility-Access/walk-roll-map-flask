@@ -57,7 +57,7 @@ class Point(db.Model):
     disability = db.Column(db.String(5))
     disability_type = db.Column(db.String(50))
     gender = db.Column(db.String(50))
-    geom = db.Column(Geometry(geometry_type='POINT', srid=4326))
+    geom = db.Column(Geometry(geometry_type='POINT', srid=3857))
     mobility_aid = db.Column(db.String(5))
     mobility_aid_type = db.Column(db.String(50))
     race = db.Column(db.String(50))

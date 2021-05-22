@@ -35,7 +35,7 @@ def point():
         points = Point.query.all()
     else:
         split = bbox.split(',')
-        points = Point.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 4326), Point.geom))
+        points = Point.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Point.geom))
     data = [point.to_dict() for point in points]
     return jsonify(data)
 
@@ -62,7 +62,7 @@ def amenity():
         amenities = Amenity.query.all()
     else:
         split = bbox.split(',')
-        amenities = Amenity.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 4326), Amenity.geom))
+        amenities = Amenity.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Amenity.geom))
     data = {
         'type': 'FeatureCollection',
         'features': [amenity.to_small_dict() for amenity in amenities]
@@ -92,7 +92,7 @@ def barrier():
         barriers = Barrier.query.all()
     else:
         split = bbox.split(',')
-        barriers = Barrier.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 4326), Barrier.geom))
+        barriers = Barrier.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Barrier.geom))
     data = {
         'type': 'FeatureCollection',
         'features': [barrier.to_small_dict() for barrier in barriers]
@@ -122,7 +122,7 @@ def concern():
         concerns = Concern.query.all()
     else:
         split = bbox.split(',')
-        concerns = Concern.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 4326), Concern.geom))
+        concerns = Concern.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Concern.geom))
     data = {
         'type': 'FeatureCollection',
         'features': [concern.to_small_dict() for concern in concerns]
@@ -152,7 +152,7 @@ def incident():
         incidents = Incident.query.all()
     else:
         split = bbox.split(',')
-        incidents = Incident.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 4326), Incident.geom))
+        incidents = Incident.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Incident.geom))
     data = {
         'type': 'FeatureCollection',
         'features': [incident.to_small_dict() for incident in incidents]
