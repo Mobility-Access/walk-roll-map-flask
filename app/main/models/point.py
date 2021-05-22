@@ -7,8 +7,6 @@ from sqlalchemy.sql import func
 
 from app import db
 
-import pdb
-
 
 types = [
     'micro_barrier',
