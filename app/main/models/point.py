@@ -121,7 +121,7 @@ class Point(db.Model):
                     setattr(self, field, dateInSeconds)
                 elif field == 'geom' and len(data[field]) == 2:
                     coords = data[field]
-                    setattr(self, field, f'POINT({coords[0]} {coords[1]})')
+                    setattr(self, field, f'SRID=3857;POINT({coords[0]} {coords[1]})')
                 else:
                     setattr(self, field, data[field])
 
