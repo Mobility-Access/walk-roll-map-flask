@@ -85,6 +85,7 @@ class Point(db.Model):
                 'id': self.id,
                 'date': dateInMilliseconds,
                 'description': self.description,
+                'type': self.type
             }
         }
         return data
@@ -117,7 +118,7 @@ class Point(db.Model):
         for field in all_point_fields:
             if field in data:
                 if field == 'date':
-                    dateInSeconds = datetime.utcfromtimestamp(data[field] / 1000)
+                    dateInSeconds = datetime.fromtimestamp(data[field] / 1000)
                     setattr(self, field, dateInSeconds)
                 elif field == 'geom' and len(data[field]) == 2:
                     coords = data[field]

@@ -31,8 +31,8 @@ class Incident(Point, db.Model):
     # Returns a subset of fields for display on the map.
     def to_small_dict(self):
         data = super().to_small_dict()
-        data['incident_type'] = self.incident_type
-        data['incident_with'] = self.incident_with
+        data['properties']['incident_type'] = self.incident_type
+        data['properties']['incident_with'] = self.incident_with
         return data
 
 

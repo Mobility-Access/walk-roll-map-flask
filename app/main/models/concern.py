@@ -23,8 +23,8 @@ class Concern(Point, db.Model):
     # Returns a subset of fields for display on the map.
     def to_small_dict(self):
         data = super().to_small_dict()
-        data['concern_type'] = self.concern_type
-        data['concern_with'] = self.concern_with
+        data['properties']['concern_type'] = self.concern_type
+        data['properties']['concern_with'] = self.concern_with
         return data
 
 

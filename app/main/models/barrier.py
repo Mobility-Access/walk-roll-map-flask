@@ -27,9 +27,9 @@ class Barrier(Point, db.Model):
     # Returns a subset of fields for display on the map.
     def to_small_dict(self):
         data = super().to_small_dict()
-        data['barrier_detail'] = self.barrier_detail
-        data['barrier_subtype'] = self.barrier_subtype
-        data['barrier_type'] = self.barrier_subtype
+        data['properties']['barrier_detail'] = self.barrier_detail
+        data['properties']['barrier_subtype'] = self.barrier_subtype
+        data['properties']['barrier_type'] = self.barrier_type
         return data
 
 
