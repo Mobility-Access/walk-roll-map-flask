@@ -54,13 +54,14 @@ class Point(db.Model):
     date = db.Column(db.DateTime)
     date_reported = db.Column(db.DateTime, server_default=func.now())
     description = db.Column(db.String(500))
-    disability = db.Column(db.String(5))
+    disability = db.Column(db.String(15))
     disability_type = db.Column(db.String(50))
     gender = db.Column(db.String(50))
     geom = db.Column(Geometry(geometry_type='POINT', srid=3857))
     mobility_aid = db.Column(db.String(5))
     mobility_aid_type = db.Column(db.String(50))
     race = db.Column(db.String(50))
+    suggested_solution = db.Column(db.String(300))
     type = db.Column(db.String(20))
 
 
@@ -69,12 +70,6 @@ class Point(db.Model):
         geom = to_shape(self.geom)
         coords = [geom.x, geom.y]
         dateInMilliseconds = datetime.timestamp(self.date) * 1000
-        # data = {
-        #     'id': self.id,
-        #     'date': dateInMilliseconds,
-        #     'description': self.description,
-        #     'geom': coords,
-        # }
         data = {
             'type': 'Feature',
             'geometry': {

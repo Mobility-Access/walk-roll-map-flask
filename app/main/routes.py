@@ -8,6 +8,7 @@ from app.main import bp
 from app.main.models.amenity import Amenity, required_amenity_fields
 from app.main.models.barrier import Barrier, required_barrier_fields
 from app.main.models.concern import Concern, required_concern_fields
+from app.main.models.hazard import Hazard, required_hazard_fields
 from app.main.models.incident import Incident, required_incident_fields
 from app.main.models.point import Point, required_point_fields
 
@@ -130,6 +131,35 @@ def concern():
 
     return jsonify(data)
 
+@bp.route('/api/hazard', methods=['GET', 'POST'])
+def hazard():
+    if request.method == 'POST':
+        data = request.get_json() or {}
+        missing_fields = validate_hazard_data(data)
+        if (len(missing_fields) > 0):
+            return make_missing_fields_error(missing_fields)
+        hazard = Hazard()
+        hazard.from_dict(data)
+        db.session.add(hazard)
+        db.session.commit()
+        response = jsonify(hazard.to_small_dict())
+        response.status_code = 201
+        return response
+
+    # Handle GET request
+    bbox = request.args.get('bbox')
+    if bbox is None:
+        hazards = Hazard.query.all()
+    else:
+        split = bbox.split(',')
+        hazard = Hazard.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Hazard.geom))
+    data = {
+        'type': 'FeatureCollection',
+        'features': [hazard.to_small_dict() for hazard in hazards]
+    }
+
+    return jsonify(data)
+
 
 @bp.route('/api/incident', methods=['GET', 'POST'])
 def incident():
@@ -183,6 +213,15 @@ def validate_barrier_data(data):
 def validate_concern_data(data):
     missing_fields = validate_point_data(data)
     for field in required_concern_fields:
+        if field not in data:
+            missing_fields.append(field)
+    return missing_fields
+
+
+# Checks if the new Hazard contains all the fields required in order for use to save it to the database
+def validate_hazard_data(data):
+    missing_fields = validate_point_data(data)
+    for field in required_hazard_fields:
         if field not in data:
             missing_fields.append(field)
     return missing_fields

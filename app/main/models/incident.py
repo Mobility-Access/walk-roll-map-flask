@@ -25,7 +25,7 @@ class Incident(Point, db.Model):
     incident_type = db.Column(db.String(10))
     incident_with = db.Column(db.String(50))
     injury_type = db.Column(db.String(50))
-    involvement = db.Column(db.String(10))
+    involvement = db.Column(db.String(20))
 
 
     # Returns a subset of fields for display on the map.
