@@ -69,7 +69,8 @@ class Point(db.Model):
     def to_small_dict(self):
         geom = to_shape(self.geom)
         coords = [geom.x, geom.y]
-        dateInMilliseconds = datetime.timestamp(self.date) * 1000
+        date_in_milliseconds = datetime.timestamp(self.date) * 1000
+        reported_date_in_milliseconds = datetime.timestamp(self.date_reported) * 1000
         data = {
             'type': 'Feature',
             'geometry': {
@@ -78,7 +79,8 @@ class Point(db.Model):
             },
             'properties': {
                 'id': self.id,
-                'date': dateInMilliseconds,
+                'date': date_in_milliseconds,
+                'date_reported': reported_date_in_milliseconds,
                 'description': self.description,
                 'type': self.type
             }
@@ -90,12 +92,12 @@ class Point(db.Model):
     def to_dict(self):
         geom = to_shape(self.geom)
         coords = [geom.y, geom.x]
-        dateInMilliseconds = datetime.timestamp(self.date) * 1000
+        date_in_milliseconds = datetime.timestamp(self.date) * 1000
         data = {
             'id': self.id,
             'birth_year': self.birth_year,
-            'date': dateInMilliseconds,
-            'date_reported': self.reported,
+            'date': date_in_milliseconds,
+            'date_reported': self.date_reported,
             'description': self.description,
             'disability': self.disability,
             'disability_type': self.disability_type,

@@ -12,6 +12,8 @@ from app.main.models.hazard import Hazard, required_hazard_fields
 from app.main.models.incident import Incident, required_incident_fields
 from app.main.models.point import Point, required_point_fields
 
+import app
+
 
 @bp.route('/')
 def index():
@@ -32,12 +34,20 @@ def index():
 @bp.route('/api/point')
 def point():
     bbox = request.args.get('bbox')
-    if bbox is None:
-        points = Point.query.all()
-    else:
+    page = request.args.get('page', type=int)
+    rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
+    if bbox:
         split = bbox.split(',')
         points = Point.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Point.geom))
-    data = [point.to_dict() for point in points]
+    if page is None:
+        points = Point.query.all()
+    else:
+        points = Point.query.paginate(page, rows, False).items
+    data = {
+        'type': 'FeatureCollection',
+        'features': [incident.to_small_dict() for incident in points],
+        'totalCount': Point.query.count()
+    }
     return jsonify(data)
 
 
@@ -59,77 +69,22 @@ def amenity():
 
     # Handle GET request
     bbox = request.args.get('bbox')
-    if bbox is None:
-        amenities = Amenity.query.all()
-    else:
+    page = request.args.get('page', type=int)
+    rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
+    if bbox:
         split = bbox.split(',')
         amenities = Amenity.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Amenity.geom))
-    data = {
-        'type': 'FeatureCollection',
-        'features': [amenity.to_small_dict() for amenity in amenities]
-    }
-    
-    return jsonify(data)
-
-
-@bp.route('/api/barrier', methods=['GET', 'POST'])
-def barrier():
-    if request.method == 'POST':
-        data = request.get_json() or {}
-        missing_fields = validate_barrier_data(data)
-        if (len(missing_fields) > 0):
-            return make_missing_fields_error(missing_fields)
-        barrier = Barrier()
-        barrier.from_dict(data)
-        db.session.add(barrier)
-        db.session.commit()
-        response = jsonify(barrier.to_small_dict())
-        response.status_code = 201
-        return response
-
-    # Handle GET request
-    bbox = request.args.get('bbox')
-    if bbox is None:
-        barriers = Barrier.query.all()
+    if page is None:
+        amenities = Amenity.query.all()
     else:
-        split = bbox.split(',')
-        barriers = Barrier.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Barrier.geom))
+        amenities = Amenity.query.paginate(page, rows, False).items
     data = {
         'type': 'FeatureCollection',
-        'features': [barrier.to_small_dict() for barrier in barriers]
+        'features': [amenity.to_small_dict() for amenity in amenities],
+        'totalCount': Amenity.query.count()
     }
-    
     return jsonify(data)
 
-
-@bp.route('/api/concern', methods=['GET', 'POST'])
-def concern():
-    if request.method == 'POST':
-        data = request.get_json() or {}
-        missing_fields = validate_concern_data(data)
-        if (len(missing_fields) > 0):
-            return make_missing_fields_error(missing_fields)
-        concern = Concern()
-        concern.from_dict(data)
-        db.session.add(concern)
-        db.session.commit()
-        response = jsonify(concern.to_small_dict())
-        response.status_code = 201
-        return response
-
-    # Handle GET request
-    bbox = request.args.get('bbox')
-    if bbox is None:
-        concerns = Concern.query.all()
-    else:
-        split = bbox.split(',')
-        concerns = Concern.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Concern.geom))
-    data = {
-        'type': 'FeatureCollection',
-        'features': [concern.to_small_dict() for concern in concerns]
-    }
-
-    return jsonify(data)
 
 @bp.route('/api/hazard', methods=['GET', 'POST'])
 def hazard():
@@ -148,16 +103,20 @@ def hazard():
 
     # Handle GET request
     bbox = request.args.get('bbox')
-    if bbox is None:
+    page = request.args.get('page', type=int)
+    rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
+    if bbox:
+        split = bbox.split(',')
+        hazards = Hazard.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Hazard.geom))
+    if page is None:
         hazards = Hazard.query.all()
     else:
-        split = bbox.split(',')
-        hazard = Hazard.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Hazard.geom))
+        hazards = Hazard.query.paginate(page, rows, False).items
     data = {
         'type': 'FeatureCollection',
-        'features': [hazard.to_small_dict() for hazard in hazards]
+        'features': [hazard.to_small_dict() for hazard in hazards],
+        'totalCount': Hazard.query.count()
     }
-
     return jsonify(data)
 
 
@@ -178,16 +137,20 @@ def incident():
 
     # Handle GET request
     bbox = request.args.get('bbox')
-    if bbox is None:
-        incidents = Incident.query.all()
-    else:
+    page = request.args.get('page', type=int)
+    rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
+    if bbox:
         split = bbox.split(',')
         incidents = Incident.query.filter(func.ST_Contains(func.ST_MakeEnvelope(split[0], split[1], split[2], split[3], 3857), Incident.geom))
+    if page is None:
+        incidents = Incident.query.all()
+    else:
+        incidents = Incident.query.paginate(page, rows, False).items
     data = {
         'type': 'FeatureCollection',
-        'features': [incident.to_small_dict() for incident in incidents]
+        'features': [incident.to_small_dict() for incident in incidents],
+        'totalCount': Incident.query.count()
     }
-
     return jsonify(data)
 
 
