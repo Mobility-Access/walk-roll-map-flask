@@ -93,11 +93,12 @@ class Point(db.Model):
         geom = to_shape(self.geom)
         coords = [geom.y, geom.x]
         date_in_milliseconds = datetime.timestamp(self.date) * 1000
+        date_reported_in_milliseconds = datetime.timestamp(self.date_reported) * 1000
         data = {
             'id': self.id,
             'birth_year': self.birth_year,
             'date': date_in_milliseconds,
-            'date_reported': self.date_reported,
+            'date_reported': date_reported_in_milliseconds,
             'description': self.description,
             'disability': self.disability,
             'disability_type': self.disability_type,
@@ -106,6 +107,7 @@ class Point(db.Model):
             'mobility_aid': self.mobility_aid,
             'mobility_aid_type': self.mobility_aid_type,
             'race': self.race,
+            'suggested_solution': self.suggested_solution,
             'type': self.type
         }
         return data
