@@ -18,14 +18,6 @@ import app
 @bp.route('/')
 def index():
     rando = [
-        {
-            'name': "Darren",
-            'occupation': 'developer'
-        },
-        {
-            'name': 'Angela',
-            'occupation': 'Regional Agrologist'
-        }
     ]
 
     return jsonify(rando)
