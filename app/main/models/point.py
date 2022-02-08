@@ -58,7 +58,7 @@ class Point(db.Model):
     disability_type = db.Column(db.String(50))
     gender = db.Column(db.String(50))
     geom = db.Column(Geometry(geometry_type='POINT', srid=3857))
-    mobility_aid = db.Column(db.String(5))
+    mobility_aid = db.Column(db.String(15))
     mobility_aid_type = db.Column(db.String(50))
     race = db.Column(db.String(50))
     suggested_solution = db.Column(db.String(300))
@@ -91,7 +91,7 @@ class Point(db.Model):
     # Returns a dictionary containing all Point fields. 
     def to_dict(self):
         geom = to_shape(self.geom)
-        coords = [geom.y, geom.x]
+        coords = [geom.x, geom.y]
         date_in_milliseconds = datetime.timestamp(self.date) * 1000
         date_reported_in_milliseconds = datetime.timestamp(self.date_reported) * 1000
         data = {
