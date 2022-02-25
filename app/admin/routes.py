@@ -1,5 +1,5 @@
 from flask import abort, g, jsonify, request, Response
-from flask_httpauth import HTTPBasicAuth
+from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
 from sqlalchemy import func
 from sqlalchemy.sql.expression import false
 
@@ -19,7 +19,10 @@ import app
 
 import pdb
 
-auth = HTTPBasicAuth()
+basic_auth = HTTPBasicAuth()
+token_auth = HTTPTokenAuth('Bearer')
+multi_auth = MultiAuth(basic_auth, token_auth)
+
 
 
 def _create_export_response(content, name, format):
@@ -32,36 +35,69 @@ def _create_export_response(content, name, format):
         headers={'Content-Disposition': f'attachment;filename={name}.{format}'})
 
 
-@auth.verify_password
-def verify_password(username_or_token, password):
+@basic_auth.verify_password
+def verify_password(username, password):
     # first try to authenticate by token
-    user = User.verify_auth_token(username_or_token)
-    if not user:
-        # try to authenticate with username/password
-        user = User.query.filter_by(username=username_or_token).first()
-        if not user or not user.verify_password(password):
-            return False
+    #user = User.verify_auth_token(username_or_token)
+    #if not user:
+    # try to authenticate with username/password
+    # pdb.set_trace()
+    user = User.query.filter_by(username=username).first()
+    if not user or not user.verify_password(password):
+        return False
     g.user = user
     return True
 
+@token_auth.verify_token
+def verify_token(token):
+    # pdb.set_trace()
+    user = User.verify_auth_token(token)
+    if not user is None:
+        return user.username
+    return None
 
-@bp.route('/admin/users', methods = ['POST'])
+
+@bp.route('/admin/user', methods = ['GET', 'OPTIONS', 'POST'])
 def new_user():
-    username = request.json.get('username')
-    password = request.json.get('password')
-    if username is None or password is None:
-        abort(400) # missing arguments
-    if User.query.filter_by(username = username).first() is not None:
-        abort(400) # existing user
-    user = User(username = username)
-    user.hash_password(password)
-    db.session.add(user)
-    db.session.commit()
-    return jsonify({ 'username': user.username })
+    if request.method == 'POST':
+        email = request.json.get('email')
+        password = request.json.get('password')
+        username = request.json.get('username')
+        
+        data = {}
+        if email is None or password is None or username is None:
+            data = {
+                'success': False,
+                'message': 'Email, password and username are required.'
+            }
+        elif User.query.filter_by(username = username).first() is not None:
+            data = {
+                'success': False,
+                'message': 'That username already exsits.'
+            }
+        else:
+            user = User(email = email, username = username,)
+            user.hash_password(password)
+            db.session.add(user)
+            db.session.commit()
+            data = { 
+                'success': True,
+                'username': user.username
+            }
+
+        return jsonify(data)
+    # GET all users
+    users = User.query.all()
+    data = {
+        'users': [user.to_dict() for user in users],
+        'totalCount': User.query.count()
+    }
+    return jsonify(data)
+
 
 
 @bp.route('/admin/password', methods = ['POST'])
-@auth.login_required
+@multi_auth.login_required
 def reset_password():
     new_password = request.json.get('password')
     if new_password is None:
@@ -73,29 +109,15 @@ def reset_password():
 
 
 @bp.route('/admin/token', methods = ['POST'])
-@auth.login_required
+@multi_auth.login_required
 def get_auth_token():
-    token = g.user.generate_auth_token(3600)
-    return jsonify({ 'token': token, 'duration': 3600 })
-
-
-@bp.route('/admin/user', methods = ["GET"])
-def get_user():
-    rando = [
-        {
-            'name': "Darren",
-            'occupation': 'developer'
-        },
-        {
-            'name': 'Angela',
-            'occupation': 'Regional Agrologist'
-        }
-    ]
-
-    return jsonify(rando)
+    delta = 600
+    token = g.user.generate_auth_token(delta)
+    return jsonify({ 'token': token, 'duration': delta })
 
 
 @bp.route('/admin/user/<username>', methods = ['DELETE', 'GET'])
+@multi_auth.login_required
 def manage_user(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
@@ -110,7 +132,7 @@ def manage_user(username):
 
 
 @bp.route('/admin/amenity/export', methods = ['GET'])
-# @auth.login_required
+@multi_auth.login_required
 def amenity_export():
     format = request.args.get('format')
     if format != 'json' and format != 'geojson':
@@ -146,7 +168,7 @@ def amenity_export():
 
 
 @bp.route('/admin/amenity/<id>', methods = ['DELETE', 'GET', 'OPTIONS', 'POST'])
-# @auth.login_required
+@multi_auth.login_required
 def amenity(id):
     amenity = Amenity.query.filter_by(id=id).first()
     data = {}
@@ -175,7 +197,7 @@ def amenity(id):
 
 
 @bp.route('/admin/hazard/export', methods = ['GET'])
-# @auth.login_required
+@multi_auth.login_required
 def hazard_export():
     format = request.args.get('format')
     if format != 'json' and format != 'geojson':
@@ -210,7 +232,7 @@ def hazard_export():
 
 
 @bp.route('/admin/hazard/<id>', methods = ['DELETE', 'GET', 'OPTIONS', 'POST'])
-# @auth.login_required
+@multi_auth.login_required
 def hazard(id):
     hazard = Hazard.query.filter_by(id=id).first()
     data = {}
@@ -239,7 +261,7 @@ def hazard(id):
 
 
 @bp.route('/admin/incident/export', methods = ['GET'])
-# @auth.login_required
+@multi_auth.login_required
 def incident_export():
     format = request.args.get('format')
     if format != 'json' and format != 'geojson':
@@ -274,7 +296,7 @@ def incident_export():
 
 
 @bp.route('/admin/incident/<id>', methods = ['DELETE', 'GET', 'OPTIONS', 'POST'])
-# @auth.login_required
+@multi_auth.login_required
 def incident(id):
     incident = Incident.query.filter_by(id=id).first()
     data = {}
@@ -303,7 +325,7 @@ def incident(id):
 
 
 @bp.route('/admin/amenity', methods = ['GET'])
-# @auth.login_required
+@multi_auth.login_required
 def get_amenities():
     page = request.args.get('page', type=int)
     rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
@@ -320,7 +342,7 @@ def get_amenities():
 
 
 @bp.route('/admin/incident', methods = ['GET'])
-# @auth.login_required
+@multi_auth.login_required
 def get_incidents():
     page = request.args.get('page', type=int)
     rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
@@ -337,7 +359,7 @@ def get_incidents():
 
 
 @bp.route('/admin/hazard', methods = ['GET'])
-# @auth.login_required
+@multi_auth.login_required
 def get_hazards():
     page = request.args.get('page', type=int)
     rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
