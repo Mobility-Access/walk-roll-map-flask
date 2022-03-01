@@ -37,7 +37,7 @@ def _create_export_response(content, name, format):
 @basic_auth.verify_password
 def verify_password(username, password):
     user = User.query.filter_by(username=username).first()
-    if not user or not user.verify_password(password):
+    if not user or not user.verify_password(password) or user.is_admin == False:
         return False
     g.user = user
     return True
@@ -46,7 +46,7 @@ def verify_password(username, password):
 @token_auth.verify_token
 def verify_token(token):
     user = User.verify_auth_token(token)
-    if not user is None:
+    if not user is None and user.is_admin == True:
         return True
     return False
 
