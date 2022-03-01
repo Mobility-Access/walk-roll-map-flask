@@ -17,7 +17,6 @@ from app.main.models.point import all_point_fields
 from app.admin.models.user import User
 import app
 
-import pdb
 
 auth = HTTPBasicAuth()
 

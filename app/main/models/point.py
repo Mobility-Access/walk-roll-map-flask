@@ -94,6 +94,12 @@ class Point(db.Model):
         coords = [geom.x, geom.y]
         date_in_milliseconds = datetime.timestamp(self.date) * 1000
         date_reported_in_milliseconds = datetime.timestamp(self.date_reported) * 1000
+        race = self.race
+        if race.startswith('{'):
+            race = race[1:]
+        if race.endswith('}'):
+            race = race[0:-1]
+        race = race.replace('"', '')
         data = {
             'id': self.id,
             'birth_year': self.birth_year,
@@ -106,7 +112,7 @@ class Point(db.Model):
             'geom': coords,
             'mobility_aid': self.mobility_aid,
             'mobility_aid_type': self.mobility_aid_type,
-            'race': self.race,
+            'race': race,
             'suggested_solution': self.suggested_solution,
             'type': self.type
         }
