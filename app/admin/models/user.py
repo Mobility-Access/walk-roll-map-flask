@@ -5,15 +5,18 @@ import jwt
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
 
-import pdb
 
+editable_user_fields = [
+    'can_download',
+    'can_edit',
+    'email',
+    'is_admin'
+]
 
-# Model and code adapted from Miguel Grinberg:
-# https://blog.miguelgrinberg.com/post/restful-authentication-with-flask
 
 class User(db.Model):
     __tablename__ = 'users'
-    can_download = db.Column(db.Boolean, default=True, nullable=False)
+    can_download = db.Column(db.Boolean, default=False, nullable=False)
     can_edit = db.Column(db.Boolean, default=False, nullable=False)
     email = db.Column(db.String(128), nullable=False)
     id = db.Column(db.Integer, primary_key = True)
@@ -22,6 +25,12 @@ class User(db.Model):
     password_hash = db.Column(db.String(128))
     
     db.UniqueConstraint(username)
+
+
+    def from_dict(self, data):
+        for field in editable_user_fields:
+            if field in data:
+                setattr(self, field, data[field])
 
 
     def to_dict(self):
@@ -53,7 +62,6 @@ class User(db.Model):
     @staticmethod
     def verify_auth_token(token):
         try:
-            # pdb.set_trace()
             data = jwt.decode(token, current_app.config['SECRET_KEY'],
                               algorithms=['HS256'])
         except:

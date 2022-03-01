@@ -17,12 +17,11 @@ from app.main.models.point import all_point_fields
 from app.admin.models.user import User
 import app
 
-import pdb
 
+# Setup auth providers from Flask-HTTPAuth
 basic_auth = HTTPBasicAuth()
 token_auth = HTTPTokenAuth('Bearer')
 multi_auth = MultiAuth(basic_auth, token_auth)
-
 
 
 def _create_export_response(content, name, format):
@@ -37,26 +36,23 @@ def _create_export_response(content, name, format):
 
 @basic_auth.verify_password
 def verify_password(username, password):
-    # first try to authenticate by token
-    #user = User.verify_auth_token(username_or_token)
-    #if not user:
-    # try to authenticate with username/password
-    # pdb.set_trace()
     user = User.query.filter_by(username=username).first()
     if not user or not user.verify_password(password):
         return False
     g.user = user
     return True
 
+
 @token_auth.verify_token
 def verify_token(token):
-    # pdb.set_trace()
     user = User.verify_auth_token(token)
     if not user is None:
-        return user.username
-    return None
+        return True
+    return False
 
-
+# Creates a new User via a POST request. The new User has
+# # no privileges to access sensitive data.
+# Access to sensitive data must be granted by an admin.
 @bp.route('/admin/user', methods = ['GET', 'OPTIONS', 'POST'])
 def new_user():
     if request.method == 'POST':
@@ -76,7 +72,7 @@ def new_user():
                 'message': 'That username already exsits.'
             }
         else:
-            user = User(email = email, username = username,)
+            user = User(email = email, username = username)
             user.hash_password(password)
             db.session.add(user)
             db.session.commit()
@@ -94,6 +90,46 @@ def new_user():
     }
     return jsonify(data)
 
+
+# Returns all Users.
+@bp.route('/admin/users', methods = ['GET'])
+@multi_auth.login_required
+def get_users():
+    users = User.query.all()
+    data = {
+        'success': True,
+        'totalCount': User.query.count(),
+        'users': [user.to_dict() for user in users]
+    }
+    return jsonify(data)
+
+
+@bp.route('/admin/user/<id>', methods = ['DELETE', 'GET', 'OPTIONS', 'POST'])
+@multi_auth.login_required
+def user(id):
+    user = User.query.filter_by(id=id).first()
+    data = {}
+    if request.method == 'DELETE':
+        if user is None:
+            data = {'success': False, 'message': 'User ID does not exist.'}
+        else:
+            db.session.delete(user)
+            db.session.commit()
+            data = { 'success': True }  
+    elif request.method == 'GET':
+        if user is None:
+            data = { 'success': False, 'message': 'User ID does not exist.' }
+        else:
+            data = { 'success': True, 'user': user.to_dict() }
+    elif request.method == 'POST':
+        if user is None:
+            data = { 'success': False, 'message': 'User ID does not exist.' }
+        else:
+            json_data = request.get_json()
+            user.from_dict(json_data)
+            db.session.commit()
+            data = { 'user': user.to_dict(), 'success': True }
+    return jsonify(data)  
 
 
 @bp.route('/admin/password', methods = ['POST'])
