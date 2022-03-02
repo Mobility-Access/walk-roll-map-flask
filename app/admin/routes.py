@@ -147,7 +147,7 @@ def reset_password():
 @bp.route('/admin/token', methods = ['POST'])
 @multi_auth.login_required
 def get_auth_token():
-    delta = 600
+    delta = 43200
     token = g.user.generate_auth_token(delta)
     return jsonify({ 'token': token, 'duration': delta })
 
