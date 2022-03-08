@@ -53,7 +53,7 @@ def verify_token(token):
 # Creates a new User via a POST request. The new User has
 # # no privileges to access sensitive data.
 # Access to sensitive data must be granted by an admin.
-@bp.route('/admin/user', methods = ['GET', 'OPTIONS', 'POST'])
+@bp.route('/admin/user', methods = ['OPTIONS', 'POST'])
 def new_user():
     if request.method == 'POST':
         email = request.json.get('email')
