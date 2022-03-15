@@ -1,18 +1,36 @@
 from datetime import datetime
 
-from flask import current_app, jsonify, request
+from flask import current_app, json, jsonify, request, Response
 from sqlalchemy import func
 
 from app import db
 from app.main import bp
-from app.main.models.amenity import Amenity, required_amenity_fields
+from app.main.models.amenity import Amenity, public_amenity_fields, required_amenity_fields
 from app.main.models.barrier import Barrier, required_barrier_fields
 from app.main.models.concern import Concern, required_concern_fields
-from app.main.models.hazard import Hazard, required_hazard_fields
-from app.main.models.incident import Incident, required_incident_fields
-from app.main.models.point import Point, required_point_fields
+from app.main.models.hazard import Hazard, public_hazard_fields, required_hazard_fields
+from app.main.models.incident import Incident, public_incident_fields, required_incident_fields
+from app.main.models.point import Point, public_point_fields, required_point_fields
 
 import app
+
+import csv
+import datetime
+import io
+import json
+import os
+
+import pdb
+
+
+def _create_export_response(content, name, format):
+    if format == 'json' or format == 'geojson':
+        mimetype = 'application/json'
+    else:
+        mimetype = 'text/csv'
+    return Response(content,
+        mimetype=mimetype,
+        headers={'Content-Disposition': f'attachment;filename={name}.{format}'})
 
 
 @bp.route('/')
@@ -21,6 +39,12 @@ def index():
     ]
 
     return jsonify(rando)
+
+@bp.route('/api/swagger.json')
+def swagger():
+    json_url = os.path.join(current_app.root_path, "swagger.json")
+    data = json.load(open(json_url))
+    return jsonify(data)
 
 
 @bp.route('/api/point')
@@ -78,6 +102,40 @@ def amenity():
     return jsonify(data)
 
 
+@bp.route('/api/amenity/export', methods = ['GET'])
+def amenity_export():
+    format = request.args.get('format')
+    if format != 'json' and format != 'geojson':
+        format = 'csv'
+    amenities = Amenity.query.all()
+    amenities_array = [amenity.to_open_data_dict() for amenity in amenities]
+    if format == 'geojson':
+        geojson = {
+            'type': 'FeatureCollection',
+            'features': amenities_array,
+            'totalCount': Amenity.query.count()
+        }
+        content = json.dumps(geojson)
+    elif format == 'json':
+        content = json.dumps(amenities_array)
+    else:
+        all_fields = public_point_fields + public_amenity_fields
+        string_io = io.StringIO()
+        csv_writer = csv.writer(string_io)
+        csv_writer.writerow(all_fields)
+        for amenity in amenities_array:
+            line = []
+            for field in all_fields:
+                if field == 'date' or field == 'date_reported':
+                    value = datetime.datetime.utcfromtimestamp(amenity[field]/1000).strftime('%Y-%m-%d %H:%M:%S')
+                    line.append(value)
+                else:
+                    line.append(amenity[field])
+            csv_writer.writerow(line)
+        content = string_io.getvalue()
+    return _create_export_response(content, 'amenity', format)
+
+
 @bp.route('/api/hazard', methods=['GET', 'POST'])
 def hazard():
     if request.method == 'POST':
@@ -112,6 +170,40 @@ def hazard():
     return jsonify(data)
 
 
+@bp.route('/api/hazard/export', methods = ['GET'])
+def hazard_export():
+    format = request.args.get('format')
+    if format != 'json' and format != 'geojson':
+        format = 'csv'
+    hazards = Hazard.query.all()
+    hazards_array = [hazard.to_open_data_dict() for hazard in hazards]
+    if format == 'geojson':
+        geojson = {
+            'type': 'FeatureCollection',
+            'features': hazards_array,
+            'totalCount': Hazard.query.count()
+        }
+        content = json.dumps(geojson)
+    elif format == 'json':
+        content = json.dumps(hazards_array)
+    else:
+        all_fields = public_point_fields + public_hazard_fields
+        string_io = io.StringIO()
+        csv_writer = csv.writer(string_io)
+        csv_writer.writerow(all_fields)
+        for hazard in hazards_array:
+            line = []
+            for field in all_fields:
+                if field == 'date' or field == 'date_reported':
+                    value = datetime.datetime.utcfromtimestamp(hazard[field]/1000).strftime('%Y-%m-%d %H:%M:%S')
+                    line.append(value)
+                else:
+                    line.append(hazard[field])
+            csv_writer.writerow(line)
+        content = string_io.getvalue()
+    return _create_export_response(content, 'hazard', format)
+
+
 @bp.route('/api/incident', methods=['GET', 'POST'])
 def incident():
     if request.method == 'POST':
@@ -144,6 +236,40 @@ def incident():
         'totalCount': Incident.query.count()
     }
     return jsonify(data)
+
+
+@bp.route('/api/incident/export', methods = ['GET'])
+def incident_export():
+    format = request.args.get('format')
+    if format != 'json' and format != 'geojson':
+        format = 'csv'
+    incidents = Incident.query.all()
+    incidents_array = [incident.to_open_data_dict() for incident in incidents]
+    if format == 'geojson':
+        geojson = {
+            'type': 'FeatureCollection',
+            'features': incidents_array,
+            'totalCount': Incident.query.count()
+        }
+        content = json.dumps(geojson)
+    elif format == 'json':
+        content = json.dumps(incidents_array)
+    else:
+        all_fields = public_point_fields + public_incident_fields
+        string_io = io.StringIO()
+        csv_writer = csv.writer(string_io)
+        csv_writer.writerow(all_fields)
+        for incident in incidents_array:
+            line = []
+            for field in all_fields:
+                if field == 'date' or field == 'date_reported':
+                    value = datetime.datetime.utcfromtimestamp(incident[field]/1000).strftime('%Y-%m-%d %H:%M:%S')
+                    line.append(value)
+                else:
+                    line.append(incident[field])
+            csv_writer.writerow(line)
+        content = string_io.getvalue()
+    return _create_export_response(content, 'incident', format)
 
 
 # Checks if the new Amenity contains all the fields required in order for use to save it to the database

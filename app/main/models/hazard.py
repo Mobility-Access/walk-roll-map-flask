@@ -15,6 +15,11 @@ all_hazard_fields = [
     'hazard_type'
 ]
 
+public_hazard_fields = [
+    'hazard_subtype',
+    'hazard_type'
+]
+
 class Hazard(Point, db.Model):
     id = db.Column(db.Integer, db.ForeignKey('point.id'), primary_key=True)
     hazard_subtype = db.Column(db.String(65))
@@ -32,6 +37,13 @@ class Hazard(Point, db.Model):
     # Returns a dictionary containing all fields. 
     def to_dict(self):
         data = super().to_dict()
+        data['hazard_subtype'] = self.hazard_subtype
+        data['hazard_type'] = self.hazard_type
+        return data
+
+
+    def to_open_data_dict(self):
+        data = super().to_open_data_dict()
         data['hazard_subtype'] = self.hazard_subtype
         data['hazard_type'] = self.hazard_type
         return data

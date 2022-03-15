@@ -47,6 +47,15 @@ all_point_fields = [
     'type'
 ]
 
+public_point_fields = [
+    'id',
+    'date',
+    'date_reported',
+    'description',
+    'geom',
+    'type'
+]
+
 
 class Point(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -114,6 +123,21 @@ class Point(db.Model):
             'mobility_aid_type': self.mobility_aid_type,
             'race': race,
             'suggested_solution': self.suggested_solution,
+            'type': self.type
+        }
+        return data
+
+    def to_open_data_dict(self):
+        geom = to_shape(self.geom)
+        coords = [geom.x, geom.y]
+        date_in_milliseconds = datetime.timestamp(self.date) * 1000
+        date_reported_in_milliseconds = datetime.timestamp(self.date_reported) * 1000
+        data = {
+            'id': self.id,
+            'date': date_in_milliseconds,
+            'date_reported': date_reported_in_milliseconds,
+            'description': self.description,
+            'geom': coords,
             'type': self.type
         }
         return data
