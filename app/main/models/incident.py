@@ -19,6 +19,13 @@ all_incident_fields = [
     'involvement'
 ]
 
+public_incident_fields = [
+    'incident_type',
+    'incident_with',
+    'injury_type',
+    'involvement'
+]
+
 
 class Incident(Point, db.Model):
     id = db.Column(db.Integer, db.ForeignKey('point.id'), primary_key=True)
@@ -36,10 +43,19 @@ class Incident(Point, db.Model):
         return data
 
 
-    # TODO: This should only be accessible by admins.
+    # This should only be accessible by admins.
     # Returns a dictionary containing all fields. 
     def to_dict(self):
         data = super().to_dict()
+        data['incident_type'] = self.incident_type
+        data['incident_with'] = self.incident_with
+        data['injury_type'] = self.injury_type
+        data['involvement'] = self.involvement
+        return data
+
+
+    def to_open_data_dict(self):
+        data = super().to_open_data_dict()
         data['incident_type'] = self.incident_type
         data['incident_with'] = self.incident_with
         data['injury_type'] = self.injury_type

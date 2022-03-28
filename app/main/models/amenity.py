@@ -13,6 +13,10 @@ all_amenity_fields = [
     'amenity_type'
 ]
 
+public_amenity_fields = [
+    'amenity_type'
+]
+
 class Amenity(Point, db.Model):
     id = db.Column(db.Integer, db.ForeignKey('point.id'), primary_key=True)
     amenity_type = db.Column(db.String(50))
@@ -31,6 +35,10 @@ class Amenity(Point, db.Model):
         data['amenity_type'] = self.amenity_type
         return data
 
+    def to_open_data_dict(self):
+        data = super().to_open_data_dict()
+        data['amenity_type'] = self.amenity_type
+        return data
 
     def from_dict(self, data):
         super().from_dict(data)
