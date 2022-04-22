@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import date, timedelta
 
 from flask import current_app
 
 from app import db
 from app.main.models.point import Point
+
 
 required_hazard_fields = [
     'hazard_subtype',
@@ -54,3 +55,54 @@ class Hazard(Point, db.Model):
         for field in all_hazard_fields:
             if field in data:
                 setattr(self, field, data[field])
+
+    
+    def is_expired(self):
+        hazard_type = self.hazard_type.casefold()
+        if hazard_type == "safety/comfort concern" or hazard_type == "crossing issue":
+            # Safety/comfort concerns and crossing issues never expire automatically
+            return False
+        elif hazard_type == "weather related or seasonal":
+            return self.is_expired_by_weather()
+        else:
+            # side walk infrastructure issue
+            return self.is_expired_by_sidewalk()
+
+
+    def is_expired_by_sidewalk(self):
+        hazard_subtype = self.hazard_subtype.casefold()
+        if hazard_subtype == "obstruction - vegetaion that narrows pathway":
+            return self.is_expired_by_time(180)
+        elif hazard_subtype == "obstruction - sign blocking path" or hazard_subtype == "obstruction - parked e-scooters/bicycles":
+            return self.is_expired_by_time(30)
+        elif hazard_subtype == "obstruction - garbage or recycling bins" or hazard_subtype == "obstruction - parked vehicles or delivery vans":
+            return self.is_expired_by_time(7)
+        elif hazard_subtype == "obstruction - inadequate or lack of safe detour for pedestrians":
+            return self.is_expired_by_time(30)
+        return False
+
+
+    def is_expired_by_weather(self):
+        hazard_subtype = self.hazard_subtype.casefold()
+        if hazard_subtype == "ice" or hazard_subtype == "puddles":
+            return self.is_expired_by_time(7)
+        elif hazard_subtype == "leaves":
+            return self.is_expired_by_time(30)
+        elif hazard_subtype == "other":
+            return self.is_expired_by_time(180)
+        else:
+            # hazard is snow which expires in 30 days and between March 31 and Nov 1
+            if self.is_expired_by_time(30) == True:
+                return True
+            year = date.today().year
+            no_snow_start = date(year, 4, 1)
+            no_snow_end = date(year, 10, 31)
+            return self.date < no_snow_start or self.date > no_snow_end
+
+    
+    def is_expired_by_time(self, interval):
+        if ((self.date + timedelta(days=interval)).date() < date.today() ):
+            return True
+        return False
+
+    

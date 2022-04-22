@@ -7,7 +7,6 @@ from sqlalchemy.sql import func
 
 from app import db
 
-
 types = [
     'micro_barrier',
     'safety_comfort_concern',
@@ -33,6 +32,7 @@ required_point_fields = [
 ]
 
 all_point_fields = [
+    'archived',
     'birth_year',
     'description',
     'date',
@@ -44,7 +44,8 @@ all_point_fields = [
     'mobility_aid',
     'mobility_aid_type',
     'race',
-    'type'
+    'type',
+    'visible'
 ]
 
 public_point_fields = [
@@ -58,6 +59,7 @@ public_point_fields = [
 
 
 class Point(db.Model):
+    archived = db.Column(db.Boolean, default=False)
     id = db.Column(db.Integer, primary_key=True)
     birth_year = db.Column(db.Integer, default=-1)
     date = db.Column(db.DateTime)
@@ -72,7 +74,12 @@ class Point(db.Model):
     race = db.Column(db.String(50))
     suggested_solution = db.Column(db.String(300))
     type = db.Column(db.String(20))
+    visible = db.Column(db.Boolean, default=True)
 
+    # Returns true if a report is considered visible. ie. The report
+    # has not been archived or marked as non-visible.
+    def is_visible(self):
+        return self.visible and not self.archived
 
     # Returns a subset of Point fields for display on the map.
     def to_small_dict(self):
@@ -111,6 +118,7 @@ class Point(db.Model):
         race = race.replace('"', '')
         data = {
             'id': self.id,
+            'archived': self.archived,
             'birth_year': self.birth_year,
             'date': date_in_milliseconds,
             'date_reported': date_reported_in_milliseconds,
@@ -123,7 +131,8 @@ class Point(db.Model):
             'mobility_aid_type': self.mobility_aid_type,
             'race': race,
             'suggested_solution': self.suggested_solution,
-            'type': self.type
+            'type': self.type,
+            'visible': self.visible
         }
         return data
 

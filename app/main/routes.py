@@ -1,4 +1,5 @@
 from datetime import datetime
+from xmlrpc.client import boolean
 
 from flask import current_app, json, jsonify, request, Response
 from sqlalchemy import func
@@ -31,6 +32,36 @@ def _create_export_response(content, name, format):
     return Response(content,
         mimetype=mimetype,
         headers={'Content-Disposition': f'attachment;filename={name}.{format}'})
+
+
+def _filter_by_visibility(reports):
+    visible_reports = []
+    for report in reports:
+        if report.is_visible():
+            visible_reports.append(report)
+    return visible_reports
+
+
+def _filter_amenities(amenities):
+    return _filter_by_visibility(amenities)
+
+
+def _filter_expired_hazards(visible_hazards):
+    non_expired_hazards = []
+    for hazard in visible_hazards:
+        if not hazard.is_expired():
+            non_expired_hazards.append(hazard)
+    return non_expired_hazards
+
+
+def _filter_hazards(hazards):
+    visible_hazards = _filter_by_visibility(hazards)
+    non_expired_hazards = _filter_expired_hazards(visible_hazards)
+    return non_expired_hazards
+
+
+def _filter_incidents(incidents):
+    return _filter_by_visibility(incidents)
 
 
 @bp.route('/')
@@ -85,6 +116,7 @@ def amenity():
 
     # Handle GET request
     bbox = request.args.get('bbox')
+    filter = request.args.get('filter', default=False, type=boolean)
     page = request.args.get('page', type=int)
     rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
     if bbox:
@@ -94,6 +126,8 @@ def amenity():
         amenities = Amenity.query.all()
     else:
         amenities = Amenity.query.paginate(page, rows, False).items
+    if filter == True:
+        amenities = _filter_amenities(amenities)
     data = {
         'type': 'FeatureCollection',
         'features': [amenity.to_small_dict() for amenity in amenities],
@@ -153,6 +187,7 @@ def hazard():
 
     # Handle GET request
     bbox = request.args.get('bbox')
+    filter = request.args.get('filter', default=False, type=boolean)
     page = request.args.get('page', type=int)
     rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
     if bbox:
@@ -162,6 +197,8 @@ def hazard():
         hazards = Hazard.query.all()
     else:
         hazards = Hazard.query.paginate(page, rows, False).items
+    if filter == True:
+        hazards = _filter_hazards(hazards)
     data = {
         'type': 'FeatureCollection',
         'features': [hazard.to_small_dict() for hazard in hazards],
@@ -221,6 +258,7 @@ def incident():
 
     # Handle GET request
     bbox = request.args.get('bbox')
+    filter = request.args.get('filter', default=False, type=boolean)
     page = request.args.get('page', type=int)
     rows = request.args.get('rows', app.Config.POINTS_PER_PAGE, type=int)
     if bbox:
@@ -230,6 +268,8 @@ def incident():
         incidents = Incident.query.all()
     else:
         incidents = Incident.query.paginate(page, rows, False).items
+    if filter == True:
+        incidents = _filter_incidents(incidents)
     data = {
         'type': 'FeatureCollection',
         'features': [incident.to_small_dict() for incident in incidents],
