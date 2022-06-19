@@ -29,3 +29,6 @@ nosetests.xml
 
 venv
 app.db
+
+# Environment vars
+.env
