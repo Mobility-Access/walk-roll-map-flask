@@ -97,7 +97,7 @@ class Hazard(Point, db.Model):
             year = date.today().year
             no_snow_start = date(year, 4, 1)
             no_snow_end = date(year, 10, 31)
-            return self.date < no_snow_start or self.date > no_snow_end
+            return self.date.date() < no_snow_start or self.date.date() > no_snow_end
 
     
     def is_expired_by_time(self, interval):
