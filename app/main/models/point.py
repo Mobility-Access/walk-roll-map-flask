@@ -41,6 +41,7 @@ all_point_fields = [
     'disability_type',
     'gender',
     'geom',
+    'heard_about',
     'mobility_aid',
     'mobility_aid_type',
     'race',
@@ -69,6 +70,7 @@ class Point(db.Model):
     disability_type = db.Column(db.String(50))
     gender = db.Column(db.String(50))
     geom = db.Column(Geometry(geometry_type='POINT', srid=3857))
+    heard_about = db.Column(db.String(100))
     mobility_aid = db.Column(db.String(15))
     mobility_aid_type = db.Column(db.String(50))
     race = db.Column(db.String(50))
@@ -127,6 +129,7 @@ class Point(db.Model):
             'disability_type': self.disability_type,
             'gender': self.gender,
             'geom': coords,
+            'heard_about': self.heard_about,
             'mobility_aid': self.mobility_aid,
             'mobility_aid_type': self.mobility_aid_type,
             'race': race,
