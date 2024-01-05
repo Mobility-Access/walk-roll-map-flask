@@ -71,14 +71,14 @@ def index():
 
     return jsonify(rando)
 
-@bp.route('/api/swagger.json')
+@bp.route('/swagger.json')
 def swagger():
     json_url = os.path.join(current_app.root_path, "swagger.json")
     data = json.load(open(json_url))
     return jsonify(data)
 
 
-@bp.route('/api/point')
+@bp.route('/point')
 def point():
     bbox = request.args.get('bbox')
     page = request.args.get('page', type=int)
@@ -98,7 +98,7 @@ def point():
     return jsonify(data)
 
 
-@bp.route('/api/amenity', methods=['GET', 'POST'])
+@bp.route('/amenity', methods=['GET', 'POST'])
 def amenity():
     if request.method == 'POST':
         data = request.get_json() or {}
@@ -136,7 +136,7 @@ def amenity():
     return jsonify(data)
 
 
-@bp.route('/api/amenity/export', methods = ['GET'])
+@bp.route('/amenity/export', methods = ['GET'])
 def amenity_export():
     format = request.args.get('format')
     if format != 'json' and format != 'geojson':
@@ -170,7 +170,7 @@ def amenity_export():
     return _create_export_response(content, 'amenity', format)
 
 
-@bp.route('/api/hazard', methods=['GET', 'POST'])
+@bp.route('/hazard', methods=['GET', 'POST'])
 def hazard():
     if request.method == 'POST':
         data = request.get_json() or {}
@@ -207,7 +207,7 @@ def hazard():
     return jsonify(data)
 
 
-@bp.route('/api/hazard/export', methods = ['GET'])
+@bp.route('/hazard/export', methods = ['GET'])
 def hazard_export():
     format = request.args.get('format')
     if format != 'json' and format != 'geojson':
@@ -241,7 +241,7 @@ def hazard_export():
     return _create_export_response(content, 'hazard', format)
 
 
-@bp.route('/api/incident', methods=['GET', 'POST'])
+@bp.route('/incident', methods=['GET', 'POST'])
 def incident():
     if request.method == 'POST':
         data = request.get_json() or {}
@@ -278,7 +278,7 @@ def incident():
     return jsonify(data)
 
 
-@bp.route('/api/incident/export', methods = ['GET'])
+@bp.route('/incident/export', methods = ['GET'])
 def incident_export():
     format = request.args.get('format')
     if format != 'json' and format != 'geojson':
